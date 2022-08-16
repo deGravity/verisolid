@@ -6,7 +6,8 @@
 #include <sstream>
 #include <string>
 #include <iomanip>
-
+#include <limits>
+#include <fstream>
 
 bool is_psbody(int id) {
     PK_ERROR_t err = PK_ERROR_no_errors;
@@ -387,7 +388,7 @@ void verify_body(int body, std::stringstream& ss) {
 
 }
 
-std::string fingerprint_part(char* path) {
+std::string fingerprint_part(const char* path) {
     ensure_parasolid_session();
     PK_PART_receive_o_t receive_opts;
     PK_PART_receive_o_m(receive_opts);
@@ -433,14 +434,30 @@ std::string fingerprint_part(char* path) {
 }
 
 int main(int argc, char** argv) {
-    if (argc < 2) {
-        std::cout << "Usage: verisolid path1 [path2 ...]" << std::endl;
-        return 0;
+    if (argc != 3) {
+        std::cout << "Usage: verisolid infile outfile" << std::endl;
+        return 1;
     }
+    // Single in-out version
+    std::ofstream outstream(argv[2]);
+    if (outstream.is_open()) {
+        std::string part_info = fingerprint_part(argv[1]);
+        outstream << part_info;
+        outstream.close();
+    } else {
+        std::cout << "Could not open file: " << argv[2] << std::endl;
+        return 2;
+    }
+    /*
     for (int i = 1; i < argc; ++i) {
         std::string part_info = fingerprint_part(argv[i]);
-        std::cout << part_info << std::endl;
+        std::cout << part_info << "\n";
     }
-   
+    std::string lineInput;
+    while (std::cin >> lineInput) {
+        std::string part_info = fingerprint_part(lineInput.c_str());
+        std::cout << part_info << "\n";
+    }
+    */
     return 0;
 }
